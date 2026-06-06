@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYT WORLD — MONDE 1: NEO CITY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00aaff;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* HUD */
+        #hud {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            color: #00aaff;
+            font-size: 12px;
+            z-index: 100;
+            text-shadow: 0 0 10px #00aaff;
+            background: rgba(0, 5, 15, 0.7);
+            padding: 15px;
+            border: 1px solid #00aaff;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+
+        .hud-section {
+            margin: 8px 0;
+            border-bottom: 1px solid #003366;
+            padding-bottom: 8px;
+        }
+
+        .hud-section:last-child {
+            border-bottom: none;
+        }
+
+        .hud-label {
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .hud-value {
+            color: #00aaff;
+        }
+
+        /* MINIMAP */
+        #minimap {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 5, 15, 0.9);
+            border: 2px solid #00aaff;
+            border-radius: 5px;
+            z-index: 100;
+        }
+
+        /* CROSSHAIR */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            border: 2px solid #00aaff;
+            border-radius: 50%;
+            z-index: 50;
+            opacity: 0.7;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00aaff;
+        }
+
+        #crosshair::before {
+            width: 8px;
+            height: 1px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #crosshair::after {
+            width: 1px;
+            height: 8px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* CHAT */
+        #chat-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 5, 15, 0.9);
+            border: 1px solid #00aaff;
+            border-radius: 5px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 11px;
+            border-bottom: 1px solid #003366;
+        }
+
+        .chat-message {
+            margin: 5px 0;
+            color: #00aaff;
+        }
+
+        .chat-message .player-name {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        #chat-input {
+            padding: 8px;
+            background: #000;
+            border: none;
+            color: #00aaff;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            border-top: 1px solid #003366;
+        }
+
+        #chat-input::placeholder {
+            color: #004466;
+        }
+
+        /* CONTROLS INFO */
+        #controls-info {
+            position: fixed;
+            bottom: 220px;
+            left: 10px;
+            background: rgba(0, 5, 15, 0.7);
+            border: 1px solid #00aaff;
+            padding: 10px;
+            font-size: 11px;
+            border-radius: 5px;
+            color: #00aaff;
+            max-width: 300px;
+        }
+
+        .control-item {
+            margin: 3px 0;
+            color: #00ff88;
+        }
+
+        .control-item span {
+            color: #00aaff;
+        }
+
+        /* COMPASS */
+        #compass {
+            position: fixed;
+            top: 170px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 5, 15, 0.9);
+            border: 2px solid #00aaff;
+            border-radius: 50%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .compass-text {
+            position: absolute;
+            font-size: 10px;
+            color: #00aaff;
+        }
+
+        /* STATUS BADGES */
+        #status-badges {
+            position: fixed;
+            top: 10px;
+            left: 320px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            background: rgba(0, 5, 15, 0.8);
+            border: 1px solid #00aaff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #00aaff;
+        }
+
+        .status-badge.active {
+            background: rgba(0, 170, 255, 0.2);
+            text-shadow: 0 0 10px #00aaff;
+        }
+
+        /* MENU */
+        #menu {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #menu.active {
+            display: flex;
+        }
+
+        #menu-content {
+            background: rgba(0, 5, 15, 0.9);
+            border: 2px solid #00aaff;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        #menu-content h1 {
+            color: #00ff88;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00ff88;
+        }
+
+        #menu-content button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #003366;
+            border: 1px solid #00aaff;
+            color: #00aaff;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        #menu-content button:hover {
+            background: #00aaff;
+            color: #000;
+            text-shadow: none;
+        }
+
+        /* POINTER LOCK */
+        body.pointer-locked #crosshair {
+            opacity: 1;
+        }
+
+        body:not(.pointer-locked) #crosshair {
+            opacity: 0.5;
+        }
+
+        .pointer-lock-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 170, 255, 0.2);
+            border: 2px solid #00aaff;
+            padding: 20px;
+            border-radius: 10px;
+            color: #00aaff;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .pointer-lock-overlay.show {
+            display: block;
+        }
+
+        /* LOADING SCREEN */
+        #loading-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2000;
+        }
+
+        .loading-text {
+            color: #00aaff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00aaff;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 10px;
+            border: 1px solid #00aaff;
+            background: #000;
+            overflow: hidden;
+            border-radius: 5px;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00aaff, #00ff88);
+            width: 0%;
+            animation: loading 3s ease-out forwards;
+        }
+
+        @keyframes loading {
+            to { width: 100%; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            #hud {
+                max-width: 250px;
+                font-size: 10px;
+                padding: 10px;
+            }
+
+            #minimap {
+                width: 120px;
+                height: 120px;
+            }
+
+            #compass {
+                width: 60px;
+                height: 60px;
+                font-size: 16px;
+            }
+
+            #chat-panel {
+                width: 250px;
+                height: 150px;
+            }
+
+            #controls-info {
+                max-width: 250px;
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-text">🌆 NEO CITY INITIALISATION</div>
+        <div class="loading-bar">
+            <div class="loading-bar-fill"></div>
+        </div>
+        <div class="loading-text" style="font-size: 14px; margin-top: 20px;">Chargement du monde...</div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD Principal -->
+    <div id="hud">
+        <div class="hud-section">
+            <span class="hud-label">👤 JOUEUR:</span>
+            <span id="hud-player-name" class="hud-value">Anonyme</span>
+        </div>
+        <div class="hud-section">
+            <span class="hud-label">❤ HP:</span>
+            <span id="hud-hp" class="hud-value">100/100</span>
+        </div>
+        <div class="hud-section">
+            <span class="hud-label">⬆ LVL:</span>
+            <span id="hud-level" class="hud-value">1</span>
+        </div>
+        <div class="hud-section">
+            <span class="hud-label">💰 OR:</span>
+            <span id="hud-gold" class="hud-value">0</span>
+        </div>
+        <div class="hud-section">
+            <span class="hud-label">📍 POS:</span>
+            <span id="hud-pos" class="hud-value">X:0 Y:0 Z:0</span>
+        </div>
+        <div class="hud-section">
+            <span class="hud-label">🎮 MONDE:</span>
+            <span id="hud-world" class="hud-value">Neo City</span>
+        </div>
+    </div>
+
+    <!-- Minimap -->
+    <canvas id="minimap"></canvas>
+
+    <!-- Crosshair -->
+    <div id="crosshair"></div>
+
+    <!-- Compass -->
+    <div id="compass">
+        <span style="position: absolute; top: 5px; color: #ff0000;">N</span>
+        <span style="position: absolute; right: 8px; color: #00aaff;">E</span>
+        <span style="position: absolute; bottom: 5px; color: #00ff88;">S</span>
+        <span style="position: absolute; left: 8px; color: #ffaa00;">O</span>
+        <span id="compass-direction" style="font-size: 20px;">↑</span>
+    </div>
+
+    <!-- Status Badges -->
+    <div id="status-badges"></div>
+
+    <!-- Controls Info -->
+    <div id="controls-info">
+        <div class="control-item">W/Z - <span>Avancer</span></div>
+        <div class="control-item">S - <span>Reculer</span></div>
+        <div class="control-item">A/Q - <span>Gauche</span></div>
+        <div class="control-item">D - <span>Droite</span></div>
+        <div class="control-item">ESPACE - <span>Sauter</span></div>
+        <div class="control-item">SHIFT - <span>Sprint</span></div>
+        <div class="control-item">T - <span>Chat</span></div>
+        <div class="control-item">~ - <span>Console</span></div>
+        <div class="control-item">ESC - <span>Menu</span></div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chat-panel">
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Appuyer T pour chatter...">
+    </div>
+
+    <!-- Menu -->
+    <div id="menu">
+        <div id="menu-content">
+            <h1>🌆 NEO CITY</h1>
+            <button id="btn-resume">▶ CONTINUER</button>
+            <button id="btn-deploy">📍 DÉPLOIEMENT</button>
+            <button id="btn-home">🏠 ACCUEIL</button>
+            <button id="btn-logout">⏏ DÉCONNEXION</button>
+        </div>
+    </div>
+
+    <!-- Pointer Lock Overlay -->
+    <div class="pointer-lock-overlay" id="pointer-lock-overlay">
+        <div>Clic pour capturer la souris</div>
+    </div>
+
+    <!-- THREE.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- SOCKET.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <script>
+        // ========== CONFIGURATION DU JEU ==========
+        const GAME_CONFIG = {
+            worldName: 'Neo City',
+            worldId: 'world-1',
+            playerName: localStorage.getItem('playerName') || 'Explorateur_' + Math.floor(Math.random() * 9999),
+            cameraFOV: 75,
+            renderDistance: 1000,
+            spawnPoint: { x: 0, y: 1.6, z: 30 }
+        };
+
+        // ========== VARIABLES GLOBALES ==========
+        let scene, camera, renderer;
+        let neoCity;
+        let player = {
+            position: new THREE.Vector3(GAME_CONFIG.spawnPoint.x, GAME_CONFIG.spawnPoint.y, GAME_CONFIG.spawnPoint.z),
+            velocity: new THREE.Vector3(0, 0, 0),
+            rotation: { x: 0, y: 0 },
+            hp: 100,
+            maxHp: 100,
+            level: 1,
+            xp: 0,
+            gold: 100,
+            speed: 5,
+            jumpForce: 0.35,
+            gravity: 0.015,
+            friction: 0.88,
+            isJumping: false,
+            isSprinting: false,
+            isCrouching: false,
+            onGround: true,
+            stamina: 100,
+            maxStamina: 100
+        };
+
+        let controls = {
+            forward: false,
+            backward: false,
+            left: false,
+            right: false,
+            jump: false,
+            sprint: false,
+            crouch: false
+        };
+
+        let gameState = {
+            menuOpen: false,
+            chatOpen: false,
+            isPaused: false,
+            isPointerLocked: false,
+            lastUpdateTime: Date.now()
+        };
+
+        let socket = null;
+
+        // ========== INITIALISATION THREE.JS ==========
+        function initThreeJS() {
+            // Renderer
+            const canvas = document.getElementById('game-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowShadowMap;
+            renderer.setClearColor(0x020810);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                GAME_CONFIG.cameraFOV,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                GAME_CONFIG.renderDistance
+            );
+            camera.position.copy(player.position);
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x020810, 800, 2000);
+            scene.background = new THREE.Color(0x020810);
+
+            // Charger Neo City
+            setTimeout(() => {
+                neoCity = new NeoCity(scene);
+                console.log('✓ Neo City chargée');
+                hideLoadingScreen();
+            }, 500);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // ========== CONTRÔLES CLAVIER ==========
+        function setupControls() {
+            document.addEventListener('keydown', (e) => {
+                const key = e.key.toLowerCase();
+
+                if (key === 'w' || key === 'z') controls.forward = true;
+                if (key === 's') controls.backward = true;
+                if (key === 'a' || key === 'q') controls.left = true;
+                if (key === 'd') controls.right = true;
+                if (key === ' ') { controls.jump = true; e.preventDefault(); }
+                if (key === 'shift') controls.sprint = true;
+                if (key === 'control') controls.crouch = true;
+
+                if (key === 't') {
+                    e.preventDefault();
+                    toggleChat();
+                }
+
+                if (key === '~' || key === '`') {
+                    e.preventDefault();
+                    // Console cheat system (à implémenter)
+                }
+
+                if (key === 'escape') {
+                    e.preventDefault();
+                    toggleMenu();
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                const key = e.key.toLowerCase();
+
+                if (key === 'w' || key === 'z') controls.forward = false;
+                if (key === 's') controls.backward = false;
+                if (key === 'a' || key === 'q') controls.left = false;
+                if (key === 'd') controls.right = false;
+                if (key === ' ') controls.jump = false;
+                if (key === 'shift') controls.sprint = false;
+                if (key === 'control') controls.crouch = false;
+            });
+
+            // Mouse controls
+            document.addEventListener('click', () => {
+                if (!gameState.menuOpen && !gameState.chatOpen) {
+                    document.body.requestPointerLock = document.body.requestPointerLock ||
+                        document.body.mozRequestPointerLock;
+                    document.body.requestPointerLock();
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    const sensitivity = 0.002;
+                    player.rotation.y -= e.movementX * sensitivity;
+                    player.rotation.x -= e.movementY * sensitivity;
+
+                    // Limiter la rotation verticale
+                    player.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, player.rotation.x));
+
+                    gameState.isPointerLocked = true;
+                    document.body.classList.add('pointer-locked');
+                    updateCompass();
+                }
+            });
+
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement !== document.body) {
+                    gameState.isPointerLocked = false;
+                    document.body.classList.remove('pointer-locked');
+                }
+            });
+        }
+
+        // ========== MISE À JOUR DU JOUEUR ==========
+        function updatePlayer(deltaTime) {
+            // Mouvement
+            const moveDir = new THREE.Vector3();
+
+            if (controls.forward) moveDir.z -= 1;
+            if (controls.backward) moveDir.z += 1;
+            if (controls.left) moveDir.x -= 1;
+            if (controls.right) moveDir.x += 1;
+
+            // Appliquer la rotation
+            if (moveDir.length() > 0) {
+                moveDir.normalize();
+                const angle = Math.atan2(moveDir.x, moveDir.z) + player.rotation.y;
+                moveDir.x = Math.sin(angle);
+                moveDir.z = Math.cos(angle);
+            }
+
+            // Sprint
+            let currentSpeed = player.speed;
+            if (controls.sprint && player.stamina > 0 && player.onGround) {
+                currentSpeed *= 2;
+                player.stamina = Math.max(0, player.stamina - deltaTime * 50);
+            } else {
+                player.stamina = Math.min(player.maxStamina, player.stamina + deltaTime * 30);
+            }
+
+            // Appliquer le mouvement
+            player.velocity.x = moveDir.x * currentSpeed;
+            player.velocity.z = moveDir.z * currentSpeed;
+
+            // Gravité
+            if (!player.onGround) {
+                player.velocity.y -= player.gravity;
+            }
+
+            // Saut
+            if (controls.jump && player.onGround) {
+                player.velocity.y = player.jumpForce;
+                player.onGround = false;
+                controls.jump = false;
+            }
+
+            // Appliquer la vélocité
+            player.position.add(player.velocity.clone().multiplyScalar(deltaTime));
+
+            // Friction
+            if (player.onGround) {
+                player.velocity.x *= player.friction;
+                player.velocity.z *= player.friction;
+            }
+
+            // Détection du sol
+            player.onGround = player.position.y <= 1.6;
+            if (player.onGround) {
+                player.position.y = 1.6;
+                player.velocity.y = 0;
+            }
+
+            // Limites du monde
+            if (Math.abs(player.position.x) > 500) player.position.x = Math.sign(player.position.x) * 500;
+            if (Math.abs(player.position.z) > 500) player.position.z = Math.sign(player.position.z) * 500;
+            if (player.position.y < -50) {
+                player.position.copy(new THREE.Vector3(GAME_CONFIG.spawnPoint.x, GAME_CONFIG.spawnPoint.y, GAME_CONFIG.spawnPoint.z));
+                player.hp = player.maxHp;
+            }
+
+            // Mettre à jour la caméra
+            updateCamera();
+        }
+
+        // ========== MISE À JOUR DE LA CAMÉRA ==========
+        function updateCamera() {
+            // Position des yeux (légèrement au-dessus de la position du joueur)
+            const eyeHeight = 1.6;
+            const cameraPosition = player.position.clone();
+            cameraPosition.y += eyeHeight * 0.7;
+
+            camera.position.lerp(cameraPosition, 0.1);
+
+            // Appliquer la rotation
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = player.rotation.y;
+            camera.rotation.x = player.rotation.x;
+        }
+
+        // ========== BOUCLE PRINCIPALE ==========
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const now = Date.now();
+            const deltaTime = Math.min((now - gameState.lastUpdateTime) / 1000, 0.1);
+            gameState.lastUpdateTime = now;
+
+            if (!gameState.isPaused) {
+                updatePlayer(deltaTime);
+
+                if (neoCity) {
+                    neoCity.update();
+                }
+            }
+
+            updateHUD();
+            updateMinimap();
+
+            renderer.render(scene, camera);
+        }
+
+        // ========== HUD ==========
+        function updateHUD() {
+            document.getElementById('hud-player-name').textContent = GAME_CONFIG.playerName;
+            document.getElementById('hud-hp').textContent = `${player.hp}/${player.maxHp}`;
+            document.getElementById('hud-level').textContent = player.level;
+            document.getElementById('hud-gold').textContent = player.gold;
+            document.getElementById('hud-pos').textContent = 
+                `X:${player.position.x.toFixed(1)} Y:${player.position.y.toFixed(1)} Z:${player.position.z.toFixed(1)}`;
+            document.getElementById('hud-world').textContent = GAME_CONFIG.worldName;
+        }
+
+        // ========== MINIMAP ==========
+        function updateMinimap() {
+            const canvas = document.getElementById('minimap');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = 150;
+            canvas.height = 150;
+
+            // Fond
+            ctx.fillStyle = 'rgba(0, 5, 15, 0.9)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grille
+            ctx.strokeStyle = '#003366';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < canvas.width; i += 15) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Joueur au centre
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            ctx.fillStyle = '#00aaff';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Direction
+            const dirX = Math.sin(player.rotation.y) * 10;
+            const dirZ = Math.cos(player.rotation.y) * 10;
+            ctx.strokeStyle = '#00ff88';
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + dirX, centerY + dirZ);
+            ctx.stroke();
+        }
+
+        // ========== COMPASS ==========
+        function updateCompass() {
+            const angle = (player.rotation.y * 180 / Math.PI + 360) % 360;
+            const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+            const dirIndex = Math.round((angle / 45) % 8);
+            document.getElementById('compass-direction').textContent = directions[dirIndex];
+        }
+
+        // ========== MENU ==========
+        function toggleMenu() {
+            gameState.menuOpen = !gameState.menuOpen;
+            document.getElementById('menu').classList.toggle('active');
+
+            if (gameState.menuOpen) {
+                document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+                document.exitPointerLock();
+            }
+        }
+
+        document.getElementById('btn-resume').onclick = () => toggleMenu();
+        document.getElementById('btn-deploy').onclick = () => window.location.href = '/pyt-deploy.html';
+        document.getElementById('btn-home').onclick = () => window.location.href = '/';
+        document.getElementById('btn-logout').onclick = () => {
+            localStorage.removeItem('playerName');
+            window.location.href = '/login.html';
+        };
+
+        // ========== CHAT ==========
+        function toggleChat() {
+            gameState.chatOpen = !gameState.chatOpen;
+            const input = document.getElementById('chat-input');
+
+            if (gameState.chatOpen) {
+                input.focus();
+                document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+                document.exitPointerLock();
+            }
+        }
+
+        document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const message = e.target.value;
+                if (message.trim()) {
+                    addChatMessage(GAME_CONFIG.playerName, message);
+                    e.target.value = '';
+                    toggleChat();
+                }
+            } else if (e.key === 'Escape') {
+                toggleChat();
+            }
+        });
+
+        function addChatMessage(playerName, message) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const msgElement = document.createElement('div');
+            msgElement.className = 'chat-message';
+            msgElement.innerHTML = `<span class="player-name">${playerName}:</span> ${message}`;
+            messagesDiv.appendChild(msgElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // ========== LOADING SCREEN ==========
+        function hideLoadingScreen() {
+            const screen = document.getElementById('loading-screen');
+            screen.style.opacity = '0';
+            screen.style.transition = 'opacity 1s ease-out';
+            setTimeout(() => {
+                screen.style.display = 'none';
+            }, 1000);
+        }
+
+        // ========== WINDOW RESIZE ==========
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ========== DÉMARRAGE ==========
+        window.addEventListener('load', () => {
+            initThreeJS();
+            setupControls();
+            animate();
+        });
+
+        // Sauvegarder le nom du joueur
+        localStorage.setItem('playerName', GAME_CONFIG.playerName);
+    </script>
+
+    <!-- Neo City Generator -->
+    <script src="world-1-neo-city.js"></script>
+</body>
+</html>
