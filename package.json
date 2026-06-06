@@ -1,0 +1,75 @@
+{
+  "name": "pyt-world",
+  "version": "1.0.0",
+  "description": "PYT WORLD - Jeu 3D Cyberpunk Futuriste",
+  "main": "electron/main.js",
+  "homepage": "./",
+  "author": "PYT Creator",
+  "license": "MIT",
+  "scripts": {
+    "react-scripts:start": "react-scripts start",
+    "react-scripts:build": "react-scripts build",
+    "react-scripts:test": "react-scripts test",
+    "react-scripts:eject": "react-scripts eject",
+    "electron-dev": "concurrently \"npm run react-scripts:start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-build": "npm run react-scripts:build && electron-builder",
+    "build": "npm run react-scripts:build",
+    "start": "electron .",
+    "dev": "electron-dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.5.4",
+    "three": "^r128",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "electron": "^latest",
+    "electron-builder": "^24.6.4",
+    "concurrently": "^8.0.1",
+    "wait-on": "^7.0.1",
+    "react-scripts": "5.0.1"
+  },
+  "build": {
+    "appId": "com.pytworld.app",
+    "productName": "PYT WORLD",
+    "files": [
+      "electron/**/*",
+      "public/**/*",
+      "server/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "certificateFile": null,
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PYT WORLD"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
+}
